@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"echo-pgsql/internal/server"
+	"github.com/younocode/go-vue-starter/server/internal/server"
 )
 
 func gracefulShutdown(apiServer *http.Server, done chan bool) {

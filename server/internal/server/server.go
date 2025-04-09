@@ -9,7 +9,7 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 
-	"echo-pgsql/internal/database"
+	"github.com/younocode/go-vue-starter/server/internal/database"
 )
 
 type Server struct {
