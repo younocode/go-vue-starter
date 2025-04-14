@@ -1,9 +1,11 @@
+import path from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
-
+import VueI18n from '@intlify/unplugin-vue-i18n/vite'
 import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import RekaResolver from 'reka-ui/resolver'
+import { visualizer } from 'rollup-plugin-visualizer'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
@@ -12,6 +14,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 // https://vite.dev/config/
 export default defineConfig({
   server: {
+    host: '0.0.0.0',
     port: 3000,
     proxy: {
       '/api': {
@@ -25,6 +28,11 @@ export default defineConfig({
     vue(),
     vueJsx(),
     vueDevTools(),
+
+    // https://github.com/intlify/bundle-tools/tree/main/packages/unplugin-vue-i18n
+    VueI18n({
+      include: [path.resolve(__dirname, 'locales/**')],
+    }),
 
     tailwindcss(),
     //  https://github.com/unplugin/unplugin-vue-components
@@ -52,6 +60,14 @@ export default defineConfig({
         'vue-router',
         '@vueuse/core',
       ],
+      vueTemplate: true,
+    }),
+
+    // https://github.com/btd/rollup-plugin-visualizer
+    visualizer({
+      filename: 'dist-stats.html',
+      gzipSize: true,
+      brotliSize: true,
     }),
   ],
   resolve: {
