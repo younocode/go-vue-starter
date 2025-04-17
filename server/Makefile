@@ -1,5 +1,14 @@
 # Simple Makefile for a Go project
 
+# migrate
+install_migrate:
+	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+# sqlc
+install_sqlc:
+	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+
+
 # Build the application
 all: build test
 

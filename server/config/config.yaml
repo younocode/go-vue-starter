@@ -1,0 +1,14 @@
+database:
+  driver: postgres
+  username: user_dKwZY5
+  password: password_SxKEGb
+  host: pgsql.pi.local
+  port: 5432
+  database: user_dKwZY5
+  schema: public
+redis:
+  username: default
+  password: redis_X632nF
+  host: redis.pi.local
+  port: 6379
+  db: 0

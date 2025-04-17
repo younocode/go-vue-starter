@@ -4,8 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/jackc/pgx/v5"
+	"github.com/younocode/go-vue-starter/server/config"
+	"github.com/younocode/go-vue-starter/server/internal/repo"
 	"log"
 	"os"
+	"reflect"
 	"strconv"
 	"time"
 
@@ -22,6 +26,8 @@ type Service interface {
 	// Close terminates the database connection.
 	// It returns an error if the connection cannot be closed.
 	Close() error
+
+	HiSqlc() error
 }
 
 type service struct {
@@ -38,20 +44,12 @@ var (
 	dbInstance *service
 )
 
-func New() Service {
-	// Reuse Connection
-	if dbInstance != nil {
-		return dbInstance
-	}
-	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&search_path=%s", username, password, host, port, database, schema)
-	db, err := sql.Open("pgx", connStr)
+func NewPgSql(cfg config.DatabaseConfig) (*sql.DB, error) {
+	db, err := sql.Open("pgx", cfg.DSN())
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	dbInstance = &service{
-		db: db,
-	}
-	return dbInstance
+	return db, nil
 }
 
 // Health checks the health of the database connection by pinging the database.
@@ -112,4 +110,38 @@ func (s *service) Health() map[string]string {
 func (s *service) Close() error {
 	log.Printf("Disconnected from database: %s", database)
 	return s.db.Close()
+}
+
+func (s *service) HiSqlc() error {
+	ctx := context.Background()
+
+	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&search_path=%s", username, password, host, port, database, schema)
+	conn, err := pgx.Connect(ctx, connStr)
+
+	queries := repo.New(conn)
+
+	// list all authors
+	user, err := queries.GetUserByEmail(ctx, "")
+	if err != nil {
+		return err
+	}
+	log.Println(user)
+
+	email := "abc@localhost"
+	insertedUser, err := queries.CreateUser(ctx, repo.CreateUserParams{
+		Email: email,
+	})
+	if err != nil {
+		return err
+	}
+	log.Println(insertedUser)
+
+	fetchedUser, err := queries.GetUserByEmail(ctx, insertedUser.Email)
+	if err != nil {
+		return err
+	}
+
+	// prints true
+	log.Println(reflect.DeepEqual(insertedUser, fetchedUser))
+	return nil
 }

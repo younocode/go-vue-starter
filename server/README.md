@@ -51,3 +51,19 @@ Clean up binary from the last build:
 ```bash
 make clean
 ```
+
+
+# database
+- create migration
+```shell
+migrate create -ext sql -dir ./internal/database/migration -seq user_table
+```
+- migrate
+```shell
+migrate -database "postgres://user_dKwZY5:password_SxKEGb@pgsql.pi.local:5432/user_dKwZY5?sslmode=disable&search_path=public" -path ./internal/database/migration up
+```
+- sqlc generate
+```shell
+sqlc generate
+
+```
