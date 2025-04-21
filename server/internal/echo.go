@@ -1,9 +1,8 @@
-package main
+package internal
 
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"net/http"
 )
 
 func NewEcho() (e *echo.Echo) {
@@ -22,8 +21,5 @@ func NewEcho() (e *echo.Echo) {
 		MaxAge:           300,
 	}))
 
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
-	})
 	return
 }

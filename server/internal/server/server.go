@@ -27,3 +27,9 @@ func (s *Server) healthHandler(c echo.Context) error {
 func (s *Server) hiSqlcHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, "hiSqlc")
 }
+
+func (s *Server) InitRouter(g *echo.Group) {
+	g.GET("/hello", s.HelloWorldHandler)
+	g.GET("/health", s.healthHandler)
+	g.GET("/sqlc", s.hiSqlcHandler)
+}
