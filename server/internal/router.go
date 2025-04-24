@@ -8,7 +8,7 @@ import (
 )
 
 func (app *App) initRouter() {
-	root := app.E.Group("")
+	root := app.e.Group("")
 	root.GET("/hi", func(c echo.Context) error {
 		return c.JSON(http.StatusCreated, "hi")
 	})
