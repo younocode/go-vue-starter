@@ -19,43 +19,43 @@ func NewUserHandler(service *service.Service) *UserHandler {
 }
 
 func (h *UserHandler) Login(c echo.Context) error {
-	res, err := h.service.UserService.Login(c.Request().Context(), model.LoginRequest{
-		Email:    c.FormValue("emailSender"),
-		Password: c.FormValue("password"),
-	})
+	var req model.LoginRequest
+	resp, err := h.service.UserService.Login(c.Request().Context(), req)
 	if err != nil {
 		if errors.Is(err, model.ErrUserNameOrPasswordFailed) {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, res)
+	return c.JSON(http.StatusOK, resp)
 }
 
 func (h *UserHandler) Register(c echo.Context) error {
-	res, err := h.service.UserService.Register(c.Request().Context(), model.RegisterRequest{
-		LoginRequest: model.LoginRequest{
-			Email:    c.FormValue("emailSender"),
-			Password: c.FormValue("password"),
-		},
-		EmailCode: c.FormValue("code"),
-	})
+	var req model.RegisterRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	resp, err := h.service.UserService.Register(c.Request().Context(), req)
 	if err != nil {
 		if errors.Is(err, model.ErrEmailCodeNotEqual) {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, res)
+	return c.JSON(http.StatusOK, resp)
 }
 
 func (h *UserHandler) SendEmailCode(c echo.Context) error {
-	err := h.service.UserService.SendEmailCode(c.Request().Context(), c.FormValue("email"))
+	var req model.SendEmailCodeRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	err := h.service.UserService.SendEmailCode(c.Request().Context(), req.Email)
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, "发送成功")
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (h *UserHandler) ForgetPassword(c echo.Context) error {
@@ -75,5 +75,4 @@ func (h *UserHandler) ForgetPassword(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, resp)
-
 }

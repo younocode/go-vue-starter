@@ -16,9 +16,8 @@ jwt:
   secret: 'jwtsecret'
   duration: 10m
 email:
-  username: MS_VyrzQl@trial-o65qngkw5owgwr12.mlsender.net
-  password: lqiPivBJPLnukHpy
-  host: smtp.mailersend.net
+  username:
+  password: onughpsfvgyrdgbc
+  host: smtp.qq.com
   port: 587
   subject: "This is my test mail"
-  test_mail: "jingyifsy@gmail.com"

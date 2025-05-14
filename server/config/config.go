@@ -68,7 +68,6 @@ type EmailConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
 	Subject  string `mapstructure:"subject"`
-	TestMail string `mapstructure:"test_mail"`
 }
 
 func (cfg *EmailConfig) DSN() string {

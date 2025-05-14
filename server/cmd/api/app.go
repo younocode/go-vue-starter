@@ -91,7 +91,8 @@ func InitApp(file string) (*core.App, error) {
 		EmailSender: es,
 	}
 
-	r := NewRouter()
+	// 初始化路由
+	r := NewRouter(h)
 	r.InitRouter(e.Group(""))
 
 	return app, err

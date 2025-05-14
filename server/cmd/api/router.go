@@ -2,17 +2,20 @@ package main
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/younocode/go-vue-starter/server/internal/handler"
 	"github.com/younocode/go-vue-starter/server/internal/router"
 	"log/slog"
 	"net/http"
 )
 
 type Router struct {
-	UserRouter router.UserRouter
+	UserRouter *router.UserRouter
 }
 
-func NewRouter() *Router {
-	return &Router{}
+func NewRouter(handler *handler.Handler) *Router {
+	return &Router{
+		UserRouter: router.NewUserRouter(handler),
+	}
 }
 
 func (r *Router) InitRouter(g *echo.Group) {

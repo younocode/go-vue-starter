@@ -5,6 +5,7 @@ import (
 	mail "github.com/jordan-wright/email"
 	"github.com/younocode/go-vue-starter/server/config"
 	"net/smtp"
+	"strings"
 )
 
 type EmailSender struct {
@@ -30,5 +31,11 @@ func (e *EmailSender) Send(email string, emailCode string) error {
 	instance.Subject = e.subject
 	instance.Text = []byte(fmt.Sprintf("你的验证码为： %s", emailCode))
 
-	return instance.Send(e.addr, e.auth)
+	err := instance.Send(e.addr, e.auth)
+	// qq邮箱 在 QUIT 时返回 “[]”，引起 short response: [] 错误
+	// net/textproto/reader.go/parseCodeLine 部分
+	if strings.Contains(err.Error(), "short response") {
+		return nil
+	}
+	return err
 }

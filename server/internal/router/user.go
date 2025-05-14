@@ -7,7 +7,13 @@ import (
 )
 
 type UserRouter struct {
-	UserHandler handler.UserHandler
+	UserHandler *handler.UserHandler
+}
+
+func NewUserRouter(handler *handler.Handler) *UserRouter {
+	return &UserRouter{
+		UserHandler: handler.UserHandler,
+	}
 }
 
 func (r UserRouter) InitRouter(g *echo.Group) {
