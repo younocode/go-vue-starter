@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/younocode/go-vue-starter/server/config"
 	"github.com/younocode/go-vue-starter/server/internal/repo"
 	"log"
+	"log/slog"
 	"os"
 	"reflect"
 	"strconv"
@@ -30,7 +32,8 @@ type Service interface {
 }
 
 type service struct {
-	db *sql.DB
+	pgxpoll *pgxpool.Pool
+	db      *sql.DB
 }
 
 var (
@@ -42,13 +45,28 @@ var (
 	schema   = os.Getenv("BLUEPRINT_DB_SCHEMA")
 )
 
-func NewDB(cfg config.DatabaseConfig) (*sql.DB, error) {
-	db, err := sql.Open(cfg.Driver, cfg.DSN())
+type Database struct {
+	Pool  *pgxpool.Pool
+	Query *repo.Queries
+}
 
+func NewDatabase(cfg config.DatabaseConfig) (*Database, error) {
+	//db, err := sql.Open(cfg.Driver, cfg.DSN())
+	pool, err := pgxpool.New(context.Background(), cfg.DSN())
 	if err != nil {
 		return nil, err
 	}
-	return db, nil
+
+	queries := repo.New(pool)
+	user, err := queries.GetUserByEmail(context.Background(), "demo@localhost.com")
+	slog.Info("user:", user)
+	if err != nil {
+		return nil, err
+	}
+	return &Database{
+		Pool:  pool,
+		Query: queries,
+	}, nil
 }
 
 // Health checks the health of the database connection by pinging the database.
@@ -114,7 +132,7 @@ func (s *service) Close() error {
 func (s *service) HiSqlc() error {
 	ctx := context.Background()
 
-	queries := repo.New(s.db)
+	queries := repo.New(s.pgxpoll)
 
 	// list all authors
 	user, err := queries.GetUserByEmail(ctx, "")

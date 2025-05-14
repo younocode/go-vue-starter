@@ -6,9 +6,10 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	AccessToken string `json:"access_token"`
-	Email       string `json:"email"`
-	UserID      int32  `json:"user_id"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	Email        string `json:"email"`
+	UserID       int32  `json:"user_id"`
 }
 
 type RegisterRequest struct {

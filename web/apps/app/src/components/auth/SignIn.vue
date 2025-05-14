@@ -52,16 +52,19 @@ watch(rememberMe, () => {
   }
 })
 
-const {execute: signIn} = useApiFetch('/sign-in', {
-  method: 'POST',
-  body: JSON.stringify(toValue(signInState))
-})
+function login() {
+  useApiFetch('/login', {
+    method: 'POST',
+    body: JSON.stringify(toValue(signInState))
+  })
+}
 
-const {execute: signUp} = useApiFetch('/sign-up', {
-  method: 'POST',
-  body: JSON.stringify(toValue(signUpState))
-})
-
+function register() {
+  useApiFetch('/sign-up', {
+    method: 'POST',
+    body: JSON.stringify(toValue(signUpState))
+  })
+}
 
 function resetPasswd() {
   router.push({
@@ -75,16 +78,16 @@ function resetPasswd() {
 
 <template>
  <div class=" h-svh flex items-center justify-center">
-   <Tabs default-value="signIn" class="w-[400px]">
+   <Tabs default-value="login" class="w-[400px]">
      <TabsList class="grid w-full grid-cols-2">
-       <TabsTrigger value="signIn">
-         Sign In
+       <TabsTrigger value="login">
+         Login
        </TabsTrigger>
-       <TabsTrigger value="signUp">
-         Sign Up
+       <TabsTrigger value="register">
+         Register
        </TabsTrigger>
      </TabsList>
-     <TabsContent value="signIn">
+     <TabsContent value="login">
        <Card>
          <CardHeader>
            <CardTitle>Login</CardTitle>
@@ -116,11 +119,11 @@ function resetPasswd() {
            </div>
          </CardContent>
          <CardFooter>
-           <Button class="w-full" @click="signIn">Login</Button>
+           <Button class="w-full" @click="login">Login</Button>
          </CardFooter>
        </Card>
      </TabsContent>
-     <TabsContent value="signUp">
+     <TabsContent value="register">
        <Card>
          <CardHeader>
            <CardTitle>Sign Up</CardTitle>
@@ -143,7 +146,7 @@ function resetPasswd() {
            </div>
          </CardContent>
          <CardFooter>
-           <Button class="w-full" @click="signUp">Create an account</Button>
+           <Button class="w-full" @click="register">Create an account</Button>
          </CardFooter>
        </Card>
      </TabsContent>

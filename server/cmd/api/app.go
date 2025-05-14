@@ -51,7 +51,7 @@ func InitApp(file string) (*core.App, error) {
 		return nil, err
 	}
 	// 初始化数据库
-	db, err := database.NewDB(cfg.Database)
+	db, err := database.NewDatabase(cfg.Database)
 	if err != nil {
 		return nil, err
 	}

@@ -3,7 +3,7 @@ withDefaults(defineProps<{
   email?:string
 }>(), {
   email: '123'
-})
+}) 
 </script>
 
 <template>

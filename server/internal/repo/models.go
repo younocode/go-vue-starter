@@ -5,13 +5,14 @@
 package repo
 
 import (
-	"time"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type User struct {
-	ID        int32     `json:"id"`
-	Email     string    `json:"emailSender"`
-	Password  string    `json:"password"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID           int32            `json:"id"`
+	Email        string           `json:"email"`
+	Password     string           `json:"password"`
+	RefreshToken pgtype.Text      `json:"refresh_token"`
+	CreatedAt    pgtype.Timestamp `json:"created_at"`
+	UpdatedAt    pgtype.Timestamp `json:"updated_at"`
 }

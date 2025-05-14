@@ -2,9 +2,10 @@ package service
 
 import (
 	"context"
-	"database/sql"
+	"encoding/base64"
 	"fmt"
 	"github.com/younocode/go-vue-starter/server/internal/cache"
+	"github.com/younocode/go-vue-starter/server/internal/database"
 	"github.com/younocode/go-vue-starter/server/internal/model"
 	"github.com/younocode/go-vue-starter/server/internal/repo"
 	"github.com/younocode/go-vue-starter/server/pkg/emailSender"
@@ -18,26 +19,28 @@ type PasswordHasher interface {
 	ComparePassword(hashedPassword string, password string) bool
 }
 
+type RandGenerator interface {
+	GenerateEmailCode(len int) string
+	GenerateRefreshToken(len int) string
+}
+
 type UserServicer interface {
 	Login(ctx context.Context, req model.LoginRequest) (*model.LoginResponse, error)
-	IsEmailAvaliable(ctx context.Context, email string) error
+	IsEmailAvailable(ctx context.Context, email string) error
 	Register(ctx context.Context, req model.RegisterRequest) (*model.LoginResponse, error)
-	GenerateEmailCode(len int) string
 	SendEmailCode(ctx context.Context, email string) error
 	ResetPassword(ctx context.Context, req model.ForgetPasswordRequest) (*model.LoginResponse, error)
 }
 
 type UserService struct {
-	queries     *repo.Queries
-	db          *sql.DB
+	db          *database.Database
 	redisCache  *cache.RedisCache
 	jwt         *jwt.JWT
 	emailSender *emailSender.EmailSender
 }
 
-func NewUserService(db *sql.DB, redisCache *cache.RedisCache, jwt *jwt.JWT, emailSender *emailSender.EmailSender) *UserService {
+func NewUserService(db *database.Database, redisCache *cache.RedisCache, jwt *jwt.JWT, emailSender *emailSender.EmailSender) *UserService {
 	return &UserService{
-		queries:     repo.New(db),
 		db:          db,
 		redisCache:  redisCache,
 		jwt:         jwt,
@@ -46,7 +49,7 @@ func NewUserService(db *sql.DB, redisCache *cache.RedisCache, jwt *jwt.JWT, emai
 }
 
 func (s *UserService) Login(ctx context.Context, req model.LoginRequest) (*model.LoginResponse, error) {
-	user, err := s.queries.GetUserByEmail(ctx, req.Email)
+	user, err := s.db.Query.GetUserByEmail(ctx, req.Email)
 	if err != nil {
 		return nil, fmt.Errorf("failed get user by emailSender: %w", err)
 	}
@@ -60,15 +63,21 @@ func (s *UserService) Login(ctx context.Context, req model.LoginRequest) (*model
 		return nil, fmt.Errorf("failed generate access token: %w", err)
 	}
 
+	refreshToken, err := s.jwt.GenerateRefreshToken(user.Email, user.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed generate refresh token: %w", err)
+	}
+
 	return &model.LoginResponse{
-		AccessToken: accessToken,
-		Email:       user.Email,
-		UserID:      user.ID,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		Email:        user.Email,
+		UserID:       user.ID,
 	}, nil
 }
 
-func (s *UserService) IsEmailAvaliable(ctx context.Context, email string) error {
-	available, err := s.queries.IsEmailAvailable(ctx, email)
+func (s *UserService) IsEmailAvailable(ctx context.Context, email string) error {
+	available, err := s.db.Query.IsEmailAvailable(ctx, email)
 	if err != nil {
 		return err
 	}
@@ -84,7 +93,7 @@ func (s *UserService) Register(ctx context.Context, req model.RegisterRequest) (
 		return nil, err
 	}
 
-	user, err := s.queries.CreateUser(ctx, repo.CreateUserParams{
+	user, err := s.db.Query.CreateUser(ctx, repo.CreateUserParams{
 		Email:    req.Email,
 		Password: hash,
 	})
@@ -97,10 +106,16 @@ func (s *UserService) Register(ctx context.Context, req model.RegisterRequest) (
 		return nil, fmt.Errorf("failed generate access token: %w", err)
 	}
 
+	refreshToken, err := s.jwt.GenerateRefreshToken(user.Email, user.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed generate refresh token: %w", err)
+	}
+
 	return &model.LoginResponse{
-		AccessToken: accessToken,
-		Email:       user.Email,
-		UserID:      user.ID,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		Email:        user.Email,
+		UserID:       user.ID,
 	}, nil
 }
 
@@ -133,20 +148,15 @@ func (s *UserService) ResetPassword(ctx context.Context, req model.ForgetPasswor
 		return nil, err
 	}
 
-	user, err := s.queries.UpdatePasswordByEmail(ctx, repo.UpdatePasswordByEmailParams{
+	// 清除 RefreshToken
+	user, err := s.db.Query.UpdatePasswordByEmail(ctx, repo.UpdatePasswordByEmailParams{
 		Email:    req.Email,
 		Password: hash,
 	})
 
-	accessToken, err := s.jwt.Generate(user.Email, user.ID)
-	if err != nil {
-		return nil, err
-	}
-
 	return &model.LoginResponse{
-		AccessToken: accessToken,
-		Email:       user.Email,
-		UserID:      user.ID,
+		Email:  user.Email,
+		UserID: user.ID,
 	}, nil
 }
 
@@ -163,12 +173,23 @@ func (s *UserService) ComparePassword(hashedPassword string, password string) bo
 	return err == nil
 }
 
-func (s *UserService) GenerateEmailCode(len int) string {
-	result := make([]byte, len)
-	const nums = "0123456789"
+func (s *UserService) GenerateEmailCode(n int) string {
+	result := make([]byte, n)
+	const letters = "0123456789"
 	for i := range result {
-		result[i] = nums[rand.Intn(10)]
+		result[i] = letters[rand.Intn(len(letters))]
 	}
 
 	return string(result)
+}
+
+func (s *UserService) GenerateRefreshToken(n int) string {
+	b := make([]byte, n)
+	if _, err := rand.Read(b); err != nil {
+		return ""
+	}
+
+	// 使用URL安全的Base64编码（去掉填充字符）
+	token := base64.URLEncoding.EncodeToString(b)
+	return token[:n]
 }

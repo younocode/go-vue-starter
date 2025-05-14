@@ -17,7 +17,8 @@ RETURNING *;
 -- name: UpdatePasswordByEmail :one
 UPDATE users
 SET password = $1,
-    updated_at    = $2
+    updated_at    = $2,
+    refresh_token = ''
 WHERE email = $3
 RETURNING *;
 

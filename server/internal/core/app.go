@@ -1,10 +1,10 @@
 package core
 
 import (
-	"database/sql"
 	"github.com/labstack/echo/v4"
 	"github.com/younocode/go-vue-starter/server/config"
 	"github.com/younocode/go-vue-starter/server/internal/cache"
+	"github.com/younocode/go-vue-starter/server/internal/database"
 	"github.com/younocode/go-vue-starter/server/internal/handler"
 	"github.com/younocode/go-vue-starter/server/internal/service"
 	"github.com/younocode/go-vue-starter/server/pkg/emailSender"
@@ -12,7 +12,7 @@ import (
 )
 
 type App struct {
-	DB          *sql.DB
+	DB          *database.Database
 	RedisCache  *cache.RedisCache
 	E           *echo.Echo
 	Service     *service.Service

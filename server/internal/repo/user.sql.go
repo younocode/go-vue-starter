@@ -7,28 +7,30 @@ package repo
 
 import (
 	"context"
-	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (emailSender,
+INSERT INTO users (email,
                    password)
 VALUES ($1, $2)
-RETURNING id, emailSender, password, created_at, updated_at
+RETURNING id, email, password, refresh_token, created_at, updated_at
 `
 
 type CreateUserParams struct {
-	Email    string `json:"emailSender"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser, arg.Email, arg.Password)
+	row := q.db.QueryRow(ctx, createUser, arg.Email, arg.Password)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
 		&i.Password,
+		&i.RefreshToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -41,22 +43,23 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteUser(ctx context.Context, id int32) error {
-	_, err := q.db.ExecContext(ctx, deleteUser, id)
+	_, err := q.db.Exec(ctx, deleteUser, id)
 	return err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, emailSender, password, created_at, updated_at FROM users
+SELECT id, email, password, refresh_token, created_at, updated_at FROM users
 WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetUser(ctx context.Context, id int32) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUser, id)
+	row := q.db.QueryRow(ctx, getUser, id)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
 		&i.Password,
+		&i.RefreshToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -64,19 +67,19 @@ func (q *Queries) GetUser(ctx context.Context, id int32) (User, error) {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, password, emailSender
+SELECT id, password, email
 FROM users
-WHERE emailSender = $1
+WHERE email = $1
 `
 
 type GetUserByEmailRow struct {
 	ID       int32  `json:"id"`
 	Password string `json:"password"`
-	Email    string `json:"emailSender"`
+	Email    string `json:"email"`
 }
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
-	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	row := q.db.QueryRow(ctx, getUserByEmail, email)
 	var i GetUserByEmailRow
 	err := row.Scan(&i.ID, &i.Password, &i.Email)
 	return i, err
@@ -85,11 +88,11 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 const isEmailAvailable = `-- name: IsEmailAvailable :one
 SELECT NOT EXISTS (SELECT 1
                    from users
-                   WHERE emailSender = $1)
+                   WHERE email = $1)
 `
 
 func (q *Queries) IsEmailAvailable(ctx context.Context, email string) (bool, error) {
-	row := q.db.QueryRowContext(ctx, isEmailAvailable, email)
+	row := q.db.QueryRow(ctx, isEmailAvailable, email)
 	var not_exists bool
 	err := row.Scan(&not_exists)
 	return not_exists, err
@@ -98,24 +101,26 @@ func (q *Queries) IsEmailAvailable(ctx context.Context, email string) (bool, err
 const updatePasswordByEmail = `-- name: UpdatePasswordByEmail :one
 UPDATE users
 SET password = $1,
-    updated_at    = $2
-WHERE emailSender = $3
-RETURNING id, emailSender, password, created_at, updated_at
+    updated_at    = $2,
+    refresh_token = ''
+WHERE email = $3
+RETURNING id, email, password, refresh_token, created_at, updated_at
 `
 
 type UpdatePasswordByEmailParams struct {
-	Password  string    `json:"password"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"emailSender"`
+	Password  string           `json:"password"`
+	UpdatedAt pgtype.Timestamp `json:"updated_at"`
+	Email     string           `json:"email"`
 }
 
 func (q *Queries) UpdatePasswordByEmail(ctx context.Context, arg UpdatePasswordByEmailParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updatePasswordByEmail, arg.Password, arg.UpdatedAt, arg.Email)
+	row := q.db.QueryRow(ctx, updatePasswordByEmail, arg.Password, arg.UpdatedAt, arg.Email)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
 		&i.Password,
+		&i.RefreshToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -124,16 +129,16 @@ func (q *Queries) UpdatePasswordByEmail(ctx context.Context, arg UpdatePasswordB
 
 const updateUser = `-- name: UpdateUser :exec
 UPDATE users
-set emailSender = $2
+set email = $2
 WHERE id = $1
 `
 
 type UpdateUserParams struct {
 	ID    int32  `json:"id"`
-	Email string `json:"emailSender"`
+	Email string `json:"email"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
-	_, err := q.db.ExecContext(ctx, updateUser, arg.ID, arg.Email)
+	_, err := q.db.Exec(ctx, updateUser, arg.ID, arg.Email)
 	return err
 }
