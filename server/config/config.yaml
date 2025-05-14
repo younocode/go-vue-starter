@@ -1,5 +1,5 @@
 database:
-  driver: pgx
+  driver: postgres
   username: user_dKwZY5
   password: password_SxKEGb
   host: pgsql.pi.local

@@ -8,7 +8,6 @@ import (
 	"github.com/younocode/go-vue-starter/server/config"
 	"github.com/younocode/go-vue-starter/server/internal/repo"
 	"log"
-	"log/slog"
 	"os"
 	"reflect"
 	"strconv"
@@ -56,13 +55,8 @@ func NewDatabase(cfg config.DatabaseConfig) (*Database, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	queries := repo.New(pool)
-	user, err := queries.GetUserByEmail(context.Background(), "demo@localhost.com")
-	slog.Info("user:", user)
-	if err != nil {
-		return nil, err
-	}
+
 	return &Database{
 		Pool:  pool,
 		Query: queries,
