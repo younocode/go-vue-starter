@@ -20,6 +20,9 @@ func NewUserHandler(service *service.Service) *UserHandler {
 
 func (h *UserHandler) Login(c echo.Context) error {
 	var req model.LoginRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 	resp, err := h.service.UserService.Login(c.Request().Context(), req)
 	if err != nil {
 		if errors.Is(err, model.ErrUserNameOrPasswordFailed) {

@@ -31,7 +31,7 @@ type Service interface {
 }
 
 type service struct {
-	pgxpoll *pgxpool.Pool
+	pgxpool *pgxpool.Pool
 	db      *sql.DB
 }
 
@@ -126,7 +126,7 @@ func (s *service) Close() error {
 func (s *service) HiSqlc() error {
 	ctx := context.Background()
 
-	queries := repo.New(s.pgxpoll)
+	queries := repo.New(s.pgxpool)
 
 	// list all authors
 	user, err := queries.GetUserByEmail(ctx, "")

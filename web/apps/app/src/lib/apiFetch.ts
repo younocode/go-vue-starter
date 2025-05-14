@@ -12,6 +12,14 @@ export const useApiFetch = createFetch({
             if (!options.headers ) {
                 options.headers = {}
             }
+            if(!(<Record<string, string>>options.headers)['Content-Type']) {
+                options.headers = {
+                    'Content-Type': 'application/json'
+                }
+            }
+            if(!(<Record<string, string>>options)['method']) {
+                options.method = "POST"
+            }
             (<Record<string, string>>options.headers).Authorization = `Bearer ${toValue(token)}`
             return { options }
         },
