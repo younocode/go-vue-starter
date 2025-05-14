@@ -7,7 +7,8 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
+      // component: () => import('../views/HomeView.vue'),
+      redirect: '/sign-in',
     },
     {
       path: '/about',
@@ -17,6 +18,16 @@ const router = createRouter({
       // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
     },
+    {
+      path: '/sign-in',
+      name: 'signIn',
+      component: () => import('@/components/auth/SignIn.vue'),
+    },
+    {
+      path: '/reset-password',
+      name: 'resetPassword',
+      component: () => import('@/components/auth/ResetPassword.vue'),
+    }
   ],
 })
 

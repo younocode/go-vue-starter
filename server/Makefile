@@ -1,13 +1,32 @@
 # Simple Makefile for a Go project
 
+install_all: install_migrate install_sqlc install_wire
 # migrate
 install_migrate:
-	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+	@echo "Installing migrate..."
+	@go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
 # sqlc
 install_sqlc:
-	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+	@echo "Installing sqlc..."
+	@go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+# wire
+install_wire:
+	@echo "Installing wire..."
+	@go install github.com/google/wire/cmd/wire@latest
 
+
+# gen
+gen_sqlc:
+	@echo "gen sqlc..."
+	@sqlc generate
+
+# migrate
+migrate_up:
+	migrate -path="./database/migrate" -database=${databaseURL} up
+
+migrate_drop:
+	migrate -path="./database/migrate" -database=${databaseURL} drop -f
 
 # Build the application
 all: build test

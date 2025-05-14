@@ -4,7 +4,6 @@ import VueI18n from '@intlify/unplugin-vue-i18n/vite'
 import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
-import RekaResolver from 'reka-ui/resolver'
 import { visualizer } from 'rollup-plugin-visualizer'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
@@ -15,7 +14,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 export default defineConfig({
   server: {
     host: '0.0.0.0',
-    port: 3000,
+    // port: 3000,
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
@@ -39,7 +38,7 @@ export default defineConfig({
     Components({
       dts: 'src/auto-components.d.ts',
       resolvers: [
-        RekaResolver(),
+
       ],
     }),
     // https://github.com/unplugin/unplugin-auto-import

@@ -1,5 +1,5 @@
 database:
-  driver: postgres
+  driver: pgx
   username: user_dKwZY5
   password: password_SxKEGb
   host: pgsql.pi.local
@@ -12,3 +12,13 @@ redis:
   host: redis.pi.local
   port: 6379
   db: 0
+jwt:
+  secret: 'jwtsecret'
+  duration: 10m
+email:
+  username: MS_VyrzQl@trial-o65qngkw5owgwr12.mlsender.net
+  password: lqiPivBJPLnukHpy
+  host: smtp.mailersend.net
+  port: 587
+  subject: "This is my test mail"
+  test_mail: "jingyifsy@gmail.com"

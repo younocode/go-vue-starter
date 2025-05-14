@@ -1,15 +1,17 @@
-package internal
+package main
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/redis/go-redis/v9"
 	"github.com/younocode/go-vue-starter/server/config"
 	"github.com/younocode/go-vue-starter/server/internal/cache"
+	"github.com/younocode/go-vue-starter/server/internal/core"
 	"github.com/younocode/go-vue-starter/server/internal/database"
+	"github.com/younocode/go-vue-starter/server/internal/handler"
+	"github.com/younocode/go-vue-starter/server/internal/service"
+	"github.com/younocode/go-vue-starter/server/pkg/emailSender"
+	"github.com/younocode/go-vue-starter/server/pkg/jwt"
 	"log"
 	"log/slog"
 	"net/http"
@@ -17,12 +19,6 @@ import (
 	"syscall"
 	"time"
 )
-
-type App struct {
-	e           *echo.Echo
-	db          *sql.DB
-	redisClient *redis.Client
-}
 
 func gracefulShutdown(apiServer *http.Server, done chan bool) {
 	// Create context that listens for the interrupt signal from the OS.
@@ -48,42 +44,56 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 	done <- true
 }
 
-func InitApp(file string) (*App, error) {
+func InitApp(file string) (*core.App, error) {
 	var err error
 	cfg, err := config.NewConfig(file)
 	if err != nil {
 		return nil, err
 	}
 	// 初始化数据库
-	db, err := database.NewPgSql(cfg.Database)
+	db, err := database.NewDB(cfg.Database)
 	if err != nil {
 		return nil, err
 	}
 
 	// 初始化 redis
-	redisCache, err := cache.NewRedisClient(cfg.Redis)
+	redisCache, err := cache.NewRedisCache(cfg.Redis)
 	if err != nil {
 		return nil, err
 	}
 
+	// 初始化 jwt
+	jr := jwt.NewJWT(cfg.JWT)
+
+	// 初始化 emailSender
+	es := emailSender.NewEmailSend(cfg.Email)
+
 	// 初始化 echo
 	e := NewEcho()
 	e.Server = &http.Server{
-		Handler:      e,                // Echo 本身实现了 http.Handler
+		Handler:      e,                // Echo 本身实现了 http.h
 		ReadTimeout:  10 * time.Second, // 读取超时
 		WriteTimeout: 30 * time.Second, // 写入超时
 		IdleTimeout:  1 * time.Minute,  // 空闲连接超时
 	}
 
-	app := &App{
-		e:           e,
-		db:          db,
-		redisClient: redisCache,
+	s := service.NewService(db, redisCache, jr, es)
+	h := handler.NewHandler(s)
+
+	app := &core.App{
+		Cfg:         cfg,
+		E:           e,
+		DB:          db,
+		RedisCache:  redisCache,
+		Jwt:         jr,
+		Service:     s,
+		Handler:     h,
+		EmailSender: es,
 	}
 
-	// 注册路由
-	app.initRouter()
-	slog.Info("app InitRouter")
+	r := NewRouter()
+	r.InitRouter(e.Group(""))
+
 	return app, err
 }
 
@@ -95,7 +105,7 @@ func Start() {
 	}
 
 	// start
-	if err = app.e.Start(":8080"); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	if err = app.E.Start(":8080"); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("failed to start server", "error", err)
 	}
 
@@ -103,7 +113,7 @@ func Start() {
 	done := make(chan bool, 1)
 
 	// Run graceful shutdown in a separate goroutine
-	go gracefulShutdown(app.e.Server, done)
+	go gracefulShutdown(app.E.Server, done)
 
 	// Wait for the graceful shutdown to complete
 	<-done

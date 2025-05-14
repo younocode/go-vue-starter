@@ -67,3 +67,8 @@ migrate -database "postgres://user_dKwZY5:password_SxKEGb@pgsql.pi.local:5432/us
 sqlc generate
 
 ```
+
+# wire
+```shell
+go install github.com/google/wire/cmd/wire@latest
+```

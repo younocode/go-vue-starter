@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"github.com/younocode/go-vue-starter/server/config"
 	"github.com/younocode/go-vue-starter/server/internal/repo"
 	"log"
@@ -43,8 +42,9 @@ var (
 	schema   = os.Getenv("BLUEPRINT_DB_SCHEMA")
 )
 
-func NewPgSql(cfg config.DatabaseConfig) (*sql.DB, error) {
-	db, err := sql.Open("pgx", cfg.DSN())
+func NewDB(cfg config.DatabaseConfig) (*sql.DB, error) {
+	db, err := sql.Open(cfg.Driver, cfg.DSN())
+
 	if err != nil {
 		return nil, err
 	}
@@ -114,10 +114,7 @@ func (s *service) Close() error {
 func (s *service) HiSqlc() error {
 	ctx := context.Background()
 
-	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&search_path=%s", username, password, host, port, database, schema)
-	conn, err := pgx.Connect(ctx, connStr)
-
-	queries := repo.New(conn)
+	queries := repo.New(s.db)
 
 	// list all authors
 	user, err := queries.GetUserByEmail(ctx, "")

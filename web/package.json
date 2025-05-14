@@ -18,7 +18,15 @@
     "@antfu/eslint-config": "^4.11.0",
     "eslint": "^9.23.0",
     "eslint-plugin-format": "^1.0.1",
+    "lint-staged": "^15.5.1",
     "sass-embedded": "^1.86.3",
+    "simple-git-hooks": "^2.13.0",
     "vitepress": "^1.6.3"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
   }
 }

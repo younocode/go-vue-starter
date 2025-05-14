@@ -27,7 +27,7 @@ WHERE id = $1 LIMIT 1;
 
 -- name: UpdateUser :exec
 UPDATE users
-set email = $2,
+set email = $2
 WHERE id = $1;
 
 -- name: DeleteUser :exec
